@@ -29,6 +29,12 @@ A mobile app that shows real time financial data from Yahoo Finance with simple 
    - List of user-marked stocks
    - Remove stocks from favorites
 
+4. **Analysis**
+   - Dedicated screen with additional indicators (e.g., RSI, MACD, Bollinger Bands)
+
+5. **Watchlist**
+   - Custom list separate from favorites for tracking potential investments
+
 ## API
 Use Yahoo Finance endpoints or an intermediary service:
 - `/quote` – current price
