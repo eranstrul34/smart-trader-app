@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Symbol Analysis</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <img id="logo" src="" alt="logo" style="width:40px;height:40px;vertical-align:middle;">
+    <h1 id="title" style="display:inline-block;margin-left:10px;">Symbol Analysis</h1>
+  </div>
+  <p id="recommendation"></p>
+  <div id="chartSection" style="display:flex;gap:20px;align-items:flex-start;">
+    <canvas id="priceChart" width="600" height="300"></canvas>
+    <div id="content"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const symbol = params.get('symbol') || 'Unknown';
+    const name = params.get('name') || symbol;
+    const logo = params.get('logo');
+    document.getElementById('title').textContent = `${name} (${symbol})`;
+    if (logo) {
+      document.getElementById('logo').src = logo;
+      document.getElementById('logo').alt = name + ' logo';
+    }
+
+    // Sample placeholder data for demonstration purposes
+    const analysisData = {
+      AAPL: {
+        rsi: 55,
+        resistance: 195,
+        bollinger: 'Crossed upper band',
+        average_trade: '1.1M',
+        recommendation: 'Buy',
+        historical_high: { price: 199.62, date: '2024-06-10' },
+        historical_low: { price: 120.13, date: '2023-10-05' }
+      },
+      GOOGL: {
+        rsi: 48,
+        resistance: 130,
+        bollinger: 'Near lower band',
+        average_trade: '800K',
+        recommendation: 'Hold',
+        historical_high: { price: 150.24, date: '2024-04-12' },
+        historical_low: { price: 88.34, date: '2023-09-19' }
+      },
+      MSFT: {
+        rsi: 60,
+        resistance: 340,
+        bollinger: 'Above middle band',
+        average_trade: '950K',
+        recommendation: 'Buy',
+        historical_high: { price: 345.76, date: '2024-05-17' },
+        historical_low: { price: 250.15, date: '2023-10-30' }
+      },
+      TSLA: {
+        rsi: 42,
+        resistance: 275,
+        bollinger: 'Below lower band',
+        average_trade: '2M',
+        recommendation: 'Sell',
+        historical_high: { price: 409.97, date: '2022-11-05' },
+        historical_low: { price: 150.22, date: '2023-12-20' }
+      }
+    };
+
+    const data = analysisData[symbol] || {};
+    document.getElementById('recommendation').textContent = 'המלצה: ' + (data.recommendation || 'N/A');
+
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const priceChart = new Chart(ctx, {
+      type: 'line',
+      data: { datasets: [{ label: symbol, data: [], borderColor: 'blue', fill: false }] },
+      options: { scales: { x: { type: 'time', time: { unit: 'day' } } } }
+    });
+
+    async function fetchHistory(sym) {
+      try {
+        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1mo&interval=1d`);
+        const json = await res.json();
+        const result = json.chart.result[0];
+        const dates = result.timestamp;
+        const closes = result.indicators.quote[0].close;
+        return dates.map((t, i) => ({ x: t * 1000, y: closes[i] }));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    fetchHistory(symbol).then(d => { priceChart.data.datasets[0].data = d; priceChart.update(); });
+
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <h3>הסבר נתונים</h3>
+      <p><strong>RSI והתנגדות:</strong> ${data.rsi !== undefined ? `${data.rsi} - ${data.resistance}` : 'N/A'}<br>
+      מדד העוצמה היחסי מסייע לקבוע האם המניה קנית או מכורה מדי, ורמת ההתנגדות מייצגת מחיר שבו צפוי לחץ מכירות.</p>
+      <p><strong>חציית בולינגר:</strong> ${data.bollinger || 'N/A'}<br>
+      חצייה של רצועות בולינגר עשויה לסמן עלייה בתנודתיות ועל כן משמשת אינדיקטור אפשרי למגמת המחיר.</p>
+      <p><strong>מחזור מסחר ממוצע:</strong> ${data.average_trade || 'N/A'}<br>
+      נתון זה מצביע על כמות המניות הממוצעת הנסחרת ביום ויכול להעיד על רמת ההתעניינות במניה.</p>
+      <p><strong>מחירים דומים בעבר:</strong></p>
+      <ul>
+        <li><strong>גבוה ביותר:</strong> ${data.historical_high ? `${data.historical_high.price} (${data.historical_high.date})` : 'N/A'}</li>
+        <li><strong>נמוך ביותר:</strong> ${data.historical_low ? `${data.historical_low.price} (${data.historical_low.date})` : 'N/A'}</li>
+      </ul>
+    `;
+  </script>
+</body>
+</html>
