@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>מניות מומלצות</title>
+  <style>
+    table { border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    .positive { color: green; }
+    .negative { color: red; }
+    tr { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>מניות מומלצות</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Logo</th>
+        <th>Symbol</th>
+        <th>Quote</th>
+        <th>Daily Change</th>
+      </tr>
+    </thead>
+    <tbody id="watchlist-body">
+    </tbody>
+  </table>
+  <script>
+    const watchlist = [
+      { symbol: 'AAPL', logo: 'https://logo.clearbit.com/apple.com', quote: 190.69, daily_change: 1.05 },
+      { symbol: 'GOOGL', logo: 'https://logo.clearbit.com/google.com', quote: 124.30, daily_change: -0.95 },
+      { symbol: 'MSFT', logo: 'https://logo.clearbit.com/microsoft.com', quote: 330.12, daily_change: 0.50 },
+      { symbol: 'TSLA', logo: 'https://logo.clearbit.com/tesla.com', quote: 265.45, daily_change: -2.30 }
+    ];
+      watchlist.sort((a, b) => b.daily_change - a.daily_change);
+
+    const tbody = document.getElementById('watchlist-body');
+    watchlist.forEach(item => {
+      const row = document.createElement('tr');
+      row.addEventListener('click', () => {
+        window.location.href = 'analysis.html?symbol=' + encodeURIComponent(item.symbol);
+      });
+
+      const logoCell = document.createElement('td');
+      const img = document.createElement('img');
+      img.src = item.logo;
+      img.alt = item.symbol + ' logo';
+      img.width = 20;
+      img.height = 20;
+      logoCell.appendChild(img);
+      row.appendChild(logoCell);
+
+      const symbolCell = document.createElement('td');
+      symbolCell.textContent = item.symbol;
+      row.appendChild(symbolCell);
+
+      const quoteCell = document.createElement('td');
+      quoteCell.textContent = item.quote.toFixed(2);
+      row.appendChild(quoteCell);
+
+      const changeCell = document.createElement('td');
+      changeCell.textContent = item.daily_change.toFixed(2) + '%';
+      changeCell.className = item.daily_change >= 0 ? 'positive' : 'negative';
+      row.appendChild(changeCell);
+
+      tbody.appendChild(row);
+    });
+  </script>
+</body>
+</html>
