@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Symbol Analysis</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <h1 id="title">Symbol Analysis</h1>
+  <div id="content"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const symbol = params.get('symbol') || 'Unknown';
+    document.getElementById('title').textContent = symbol + ' Analysis';
+
+    // Sample placeholder data for demonstration purposes
+    const analysisData = {
+      AAPL: {
+        rsi: 55,
+        resistance: 195,
+        bollinger: 'Crossed upper band',
+        average_trade: '1.1M',
+        recommendation: 'Buy',
+        historical_high: { price: 199.62, date: '2024-06-10' },
+        historical_low: { price: 120.13, date: '2023-10-05' }
+      },
+      GOOGL: {
+        rsi: 48,
+        resistance: 130,
+        bollinger: 'Near lower band',
+        average_trade: '800K',
+        recommendation: 'Hold',
+        historical_high: { price: 150.24, date: '2024-04-12' },
+        historical_low: { price: 88.34, date: '2023-09-19' }
+      },
+      MSFT: {
+        rsi: 60,
+        resistance: 340,
+        bollinger: 'Above middle band',
+        average_trade: '950K',
+        recommendation: 'Buy',
+        historical_high: { price: 345.76, date: '2024-05-17' },
+        historical_low: { price: 250.15, date: '2023-10-30' }
+      },
+      TSLA: {
+        rsi: 42,
+        resistance: 275,
+        bollinger: 'Below lower band',
+        average_trade: '2M',
+        recommendation: 'Sell',
+        historical_high: { price: 409.97, date: '2022-11-05' },
+        historical_low: { price: 150.22, date: '2023-12-20' }
+      }
+    };
+
+    const data = analysisData[symbol] || {};
+
+    const content = document.getElementById('content');
+    content.innerHTML = `
+      <p><strong>RSI - Resistance:</strong> ${data.rsi !== undefined ? `${data.rsi} - ${data.resistance}` : 'N/A'}</p>
+      <p><strong>Bollinger cross:</strong> ${data.bollinger || 'N/A'}</p>
+      <p><strong>Average trade:</strong> ${data.average_trade || 'N/A'}</p>
+      <p><strong>Recommendation from Yahoo Finance:</strong> ${data.recommendation || 'N/A'}</p>
+      <p><strong>Similar past prices:</strong></p>
+      <ul>
+        <li><strong>Highest:</strong> ${data.historical_high ? `${data.historical_high.price} (${data.historical_high.date})` : 'N/A'}</li>
+        <li><strong>Lowest:</strong> ${data.historical_low ? `${data.historical_low.price} (${data.historical_low.date})` : 'N/A'}</li>
+      </ul>
+    `;
+  </script>
+</body>
+</html>
