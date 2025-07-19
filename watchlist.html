@@ -1,183 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="he">
 <head>
   <meta charset="UTF-8">
   <title>מניות מומלצות</title>
   <style>
-    table { border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     .positive { color: green; }
     .negative { color: red; }
     tr { cursor: pointer; }
+    input, select { margin: 10px; padding: 5px; }
   </style>
 </head>
 <body>
   <h1>מניות מומלצות</h1>
-  <table>
-    <thead>
-      <tr>
-        <th colspan="4">
-          <input id="search" placeholder="חיפוש סימבול" />
-          <select id="sortOrder">
-            <option value="desc">מהגבוה לנמוך</option>
-            <option value="asc">מהנמוך לגבוה</option>
-          </select>
-        </th>
-      </tr>
-      <tr>
-        <th>Logo</th>
-        <th>Symbol</th>
-        <th>Quote</th>
-        <th>Daily Change</th>
-      </tr>
-    </thead>
-    <tbody id="watchlist-body">
-    </tbody>
-  </table>
-  <div id="chart-container" style="margin-top:20px;">
-    <h2>השוואת מניות</h2>
-    <p>גררו שורה מהטבלה אל הגרף כדי לצפות בביצועים. ניתן לגרור מספר מניות להשוואה.</p>
-    <canvas id="compareChart" width="600" height="300"></canvas>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-  <script>
-    const watchlistSymbols = [
-      { symbol: "AAPL", name: "Apple Inc.", logo: "https://logo.clearbit.com/apple.com" },
-      { symbol: "GOOGL", name: "Alphabet Inc.", logo: "https://logo.clearbit.com/google.com" },
-      { symbol: "MSFT", name: "Microsoft Corp.", logo: "https://logo.clearbit.com/microsoft.com" },
-      { symbol: "TSLA", name: "Tesla Inc.", logo: "https://logo.clearbit.com/tesla.com" }
-    ];
-    let watchlist = [];
-    const tbody = document.getElementById("watchlist-body");
-    const searchInput = document.getElementById("search");
-    const sortOrderSelect = document.getElementById("sortOrder");
-    let currentOrder = "desc";
 
-    const ctx = document.getElementById('compareChart').getContext('2d');
-    const compareChart = new Chart(ctx, {
-      type: 'line',
-      data: { datasets: [] },
-      options: {
-        scales: { x: { type: 'time', time: { unit: 'day' } } }
-      }
-    });
-
-    function randomColor() {
-      return '#' + Math.floor(Math.random()*16777215).toString(16);
-    }
-
-    async function fetchPrices() {
-      const symbols = watchlistSymbols.map(s => s.symbol).join(',');
-      try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`);
-        const json = await res.json();
-        watchlist = json.quoteResponse.result.map(item => {
-          const base = watchlistSymbols.find(b => b.symbol === item.symbol) || {};
-          return {
-            symbol: item.symbol,
-            name: base.name,
-            logo: base.logo,
-            quote: item.regularMarketPrice,
-            daily_change: item.regularMarketChangePercent
-          };
-        });
-      } catch (e) {
-        watchlist = watchlistSymbols.map(item => ({ ...item, quote: 0, daily_change: 0 }));
-      }
-      applyFilters();
-    }
-
-    async function fetchHistory(symbol) {
-      try {
-        const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1mo&interval=1d`);
-        const json = await res.json();
-        const result = json.chart.result[0];
-        const dates = result.timestamp;
-        const closes = result.indicators.quote[0].close;
-        return dates.map((t, i) => ({ x: t * 1000, y: closes[i] }));
-      } catch (e) {
-        return [];
-      }
-    }
-
-    async function addSymbolToChart(symbol) {
-      if (compareChart.data.datasets.some(d => d.label === symbol)) return;
-      const data = await fetchHistory(symbol);
-      if (data.length === 0) return;
-      compareChart.data.datasets.push({
-        label: symbol,
-        borderColor: randomColor(),
-        data,
-        fill: false
-      });
-      compareChart.update();
-    }
-
-    function renderTable(list) {
-      tbody.innerHTML = "";
-      list.forEach(item => {
-        const row = document.createElement("tr");
-        row.draggable = true;
-        row.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', item.symbol);
-        });
-        row.addEventListener("click", () => {
-          const url = new URL('analysis.html', window.location.href);
-          url.searchParams.set('symbol', item.symbol);
-          if (item.name) url.searchParams.set('name', item.name);
-          if (item.logo) url.searchParams.set('logo', item.logo);
-          window.location.href = url.toString();
-        });
-
-        const logoCell = document.createElement("td");
-        const img = document.createElement("img");
-        img.src = item.logo;
-        img.alt = item.symbol + " logo";
-        img.width = 20;
-        img.height = 20;
-        logoCell.appendChild(img);
-        row.appendChild(logoCell);
-
-        const symbolCell = document.createElement("td");
-        symbolCell.textContent = item.symbol;
-        row.appendChild(symbolCell);
-
-        const quoteCell = document.createElement("td");
-        quoteCell.textContent = item.quote.toFixed(2);
-        row.appendChild(quoteCell);
-
-        const changeCell = document.createElement("td");
-        changeCell.textContent = item.daily_change.toFixed(2) + "%";
-        changeCell.className = item.daily_change >= 0 ? "positive" : "negative";
-        row.appendChild(changeCell);
-
-      tbody.appendChild(row);
-    });
-  }
-
-    function applyFilters() {
-      const query = searchInput.value.toLowerCase();
-      let filtered = watchlist.filter(item => item.symbol.toLowerCase().includes(query));
-      filtered.sort((a, b) => currentOrder === "asc" ? a.daily_change - b.daily_change : b.daily_change - a.daily_change);
-      renderTable(filtered);
-    }
-
-    searchInput.addEventListener("input", applyFilters);
-    sortOrderSelect.addEventListener("change", () => {
-      currentOrder = sortOrderSelect.value;
-      applyFilters();
-    });
-
-    const chartContainer = document.getElementById('chart-container');
-    chartContainer.addEventListener('dragover', e => e.preventDefault());
-    chartContainer.addEventListener('drop', e => {
-      e.preventDefault();
-      const symbol = e.dataTransfer.getData('text/plain');
-      if (symbol) addSymbolToChart(symbol);
-    });
-
-    fetchPrices();
-  </script>
-</body>
-</html>
+  <input id="search" placeholder="חיפוש סימבול" />
+  <select id="sortOrder">
+    <option value="desc">מהגבוה לנמוך</option>
+    <option value="asc">מהנמוך לגבו
